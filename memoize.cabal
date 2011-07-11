@@ -1,6 +1,6 @@
 name:           memoize
 version:        0.1
-cabal-version:  >= 1.4
+cabal-version:  >= 1.6
 license:        BSD3
 license-file:   LICENSE
 stability:      experimental
@@ -10,6 +10,7 @@ category:       Data
 synopsis:       A memoization library
 build-type:     Simple
 tested-with:    GHC == 7.0.2, GHC == 6.12.3
+
 description:
         This library provides a type class 'Memoizable' for memoizing
         functions, along with instances for a variety of argument types.
@@ -33,3 +34,7 @@ library
   other-modules:
     Data.Function.Memoize.TH
     Data.Function.Memoize.Class
+
+source-repository head
+  type:                 git
+  location:             git://github.com/tov/memoize.git

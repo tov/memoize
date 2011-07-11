@@ -90,7 +90,7 @@ memoFix2 ff = f where f = memoize2 (ff f)
 -- | Three argument version of 'memoFix'.
 memoFix3 ∷ (Memoizable a, Memoizable b, Memoizable c) ⇒
            ((a → b → c → v) → a → b → c → v) → a → b → c → v
-memoFix3 ff = f where f = memoize2 (ff f)
+memoFix3 ff = f where f = memoize3 (ff f)
 
 -- | Four argument version of 'memoFix'.
 memoFix4 ∷ (Memoizable a, Memoizable b, Memoizable c, Memoizable d) ⇒
