@@ -248,7 +248,8 @@ finiteLookup cache0 a0 =
           GT → loop (succ mean) stop (btRight cache)
 
 meanFinite     ∷ (Bounded a, Enum a) ⇒ a → a → a
-meanFinite a b = toEnum (ia + (ib - ia) `div` 2)
+meanFinite a b = toEnum (ia `div` 2 + ib `div` 2 +
+                           if odd ia && odd ib then 1 else 0)
   where
     ia = fromEnum a
     ib = fromEnum b
