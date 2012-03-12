@@ -9,7 +9,7 @@ maintainer:     tov@ccs.neu.edu
 category:       Data
 synopsis:       A memoization library
 build-type:     Simple
-tested-with:    GHC == 7.0.2, GHC == 6.12.3
+tested-with:    GHC == 7.4.1, GHC == 7.0.2, GHC == 6.12.3
 
 description:
         This library provides a type class 'Memoizable' for memoizing
@@ -23,8 +23,7 @@ description:
         Haskell, appear to be true.
 
 library
-  build-depends:        haskell98 >=1 && <2,
-                        base >=3 && <5,
+  build-depends:        base >=3 && <5,
                         template-haskell >=2
 
   ghc-options:          -Wall -fno-warn-orphans
