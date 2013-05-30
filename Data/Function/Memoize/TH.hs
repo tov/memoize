@@ -1,6 +1,7 @@
 {-# LANGUAGE
       TemplateHaskell,
-      UnicodeSyntax
+      UnicodeSyntax,
+      CPP
     #-}
 {- |
     Exports functions for deriving instances of 'Memoizable' using
@@ -165,7 +166,11 @@ buildContext mindices tvbs tvs =
     Nothing  → filterBy isStar       tvbs   tvs
   --
   isStar (PlainTV _) = True
+#if __GLASGOW_HASKELL__ >= 706
+  isStar (KindedTV _ StarT) = True
+#else
   isStar (KindedTV _ StarK) = True
+#endif
   isStar (KindedTV _ _) = False
   --
   filterBy ∷ (a → Bool) → [a] → [b] → [b]
