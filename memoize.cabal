@@ -33,6 +33,7 @@ library
   other-modules:
     Data.Function.Memoize.TH
     Data.Function.Memoize.Class
+    Data.Function.Memoize.Rec
 
 source-repository head
   type:                 git

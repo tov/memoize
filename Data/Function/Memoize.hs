@@ -30,6 +30,9 @@ module Data.Function.Memoize (
 
   -- * Deriving 'Memoizable'
   deriveMemoizable, deriveMemoizableParams, deriveMemoize,
+
+  -- * Macro for dealing with recursion
+  memoizeRec
 ) where
 
 import Control.Applicative
@@ -38,6 +41,7 @@ import Debug.Trace
 
 import Data.Function.Memoize.Class
 import Data.Function.Memoize.TH
+import Data.Function.Memoize.Rec
 
 -- | Memoize a two argument function
 memoize2 ∷ (Memoizable a, Memoizable b) ⇒
