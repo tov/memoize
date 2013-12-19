@@ -13,13 +13,11 @@ memoizeRec' :: Dec -> Q Dec
 memoizeRec' (FunD f cs)         = do
   f' <- newName "f'"
   e <- [| memoize $(varE f') |]
-  let body = LetE [FunD f' cs] e
-  return $ ValD (VarP f) (NormalB body) []
+  return $ ValD (VarP f) (NormalB e) [FunD f' cs]
 
 memoizeRec' (ValD (VarP f) b w) = do
   f' <- newName "f'"
   e <- [| memoize $(varE f') |]
-  let body = LetE [ValD (VarP f') b w] e
-  return $ ValD (VarP f) (NormalB body) w
+  return $ ValD (VarP f) (NormalB e) [ValD (VarP f') b w]
 
 memoizeRec' d                   = return d
