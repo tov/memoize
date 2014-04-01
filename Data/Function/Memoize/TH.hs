@@ -1,6 +1,7 @@
 {-# LANGUAGE
       TemplateHaskell,
-      UnicodeSyntax
+      UnicodeSyntax,
+      CPP
     #-}
 {- |
     Exports functions for deriving instances of 'Memoizable' using
@@ -153,7 +154,7 @@ freshNames xs = take (length xs) alphabet
 -- information to select which parameters to include.  If the first
 -- argument is @Just ixs@, then there should be 'Memoizable' instances
 -- for exactly those parameters, by index, in the context. Otherwise,
--- choose the parameters that have no explicit kind or kind @*@ from the
+-- choose the parameters that have no explicit kind from the
 -- list of binders. The third argument gives the actual type variable
 -- names to use.
 buildContext ∷ Maybe [Int] → [TyVarBndr] → [Name] → CxtQ
@@ -165,7 +166,11 @@ buildContext mindices tvbs tvs =
     Nothing  → filterBy isStar       tvbs   tvs
   --
   isStar (PlainTV _) = True
+#if __GLASGOW_HASKELL__ >= 706
+  isStar (KindedTV _ StarT) = True
+#else
   isStar (KindedTV _ StarK) = True
+#endif
   isStar (KindedTV _ _) = False
   --
   filterBy ∷ (a → Bool) → [a] → [b] → [b]
