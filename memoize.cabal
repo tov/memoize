@@ -1,5 +1,5 @@
 name:           memoize
-version:        0.3
+version:        0.4
 cabal-version:  >= 1.6
 license:        BSD3
 license-file:   LICENSE
@@ -24,7 +24,7 @@ description:
 
 library
   build-depends:        base >=3 && <5,
-                        template-haskell >=2
+                        template-haskell >=2 && <3
 
   ghc-options:          -Wall -fno-warn-orphans
 
