@@ -212,7 +212,7 @@ buildMethodExp ∷ [(Name, Int)] → ExpQ
 buildMethodExp cons = do
   f      ← newName "f"
   look   ← newName "look"
-  caches ← mapM (newName . ("cache"++) . nameBase . fst) cons
+  caches ← mapM (\ _ -> newName "cache") cons
   lam1E (varP f)
     (letE
       (buildLookup look cons caches
