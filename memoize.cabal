@@ -1,6 +1,6 @@
 name:           memoize
 version:        0.6
-cabal-version:  >= 1.6
+cabal-version:  >= 1.8
 license:        BSD3
 license-file:   LICENSE
 stability:      experimental
@@ -34,6 +34,18 @@ library
     Data.Function.Memoize.TH
     Data.Function.Memoize.Class
 
+test-suite memoize-test1
+    Hs-Source-Dirs: test
+    Type: exitcode-stdio-1.0
+    Main-is: test1.hs
+    build-depends: base, memoize
+
+test-suite memoize-test2
+    Hs-Source-Dirs: test
+    Type: exitcode-stdio-1.0
+    Main-is: test2.hs
+    build-depends: base, memoize
+    
 source-repository head
   type:                 git
   location:             git://github.com/tov/memoize.git
