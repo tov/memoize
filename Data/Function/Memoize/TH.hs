@@ -118,9 +118,17 @@ checkName ∷ Name → Q (Name, [TyVarBndr], [(Name, Int)])
 checkName name0 = do
   info            ← reify name0
   case info of
+#if MIN_VERSION_template_haskell(2,11,0)
+    TyConI (DataD _ name tvbs _ cons _)
+#else
     TyConI (DataD _ name tvbs cons _)
+#endif
                → return (name, tvbs, stdizeCon <$> cons)
+#if MIN_VERSION_template_haskell(2,11,0)
+    TyConI (NewtypeD _ name tvbs _ con _)
+#else
     TyConI (NewtypeD _ name tvbs con _)
+#endif
                → return (name, tvbs, [stdizeCon con])
     _          → fail $
       "deriveMemoizable: Can't derive a Memoizable instance for `" ++
