@@ -27,7 +27,7 @@ library
                         template-haskell >=2 && <3
 
   ghc-options:          -Wall -fno-warn-orphans
-
+  hs-source-dirs:       src
   exposed-modules:
     Data.Function.Memoize
   other-modules:
