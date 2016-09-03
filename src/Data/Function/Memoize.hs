@@ -32,7 +32,6 @@ module Data.Function.Memoize (
   deriveMemoizable, deriveMemoizableParams, deriveMemoize,
 ) where
 
-import Control.Applicative
 import Control.Monad
 import Debug.Trace
 

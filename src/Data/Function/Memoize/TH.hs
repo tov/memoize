@@ -12,7 +12,6 @@ module Data.Function.Memoize.TH (
   deriveMemoizable, deriveMemoizableParams, deriveMemoize,
 ) where
 
-import Control.Applicative
 import Control.Monad
 import Language.Haskell.TH
 
@@ -167,7 +166,11 @@ freshNames xs = take (length xs) alphabet
 -- names to use.
 buildContext ∷ Maybe [Int] → [TyVarBndr] → [Name] → CxtQ
 buildContext mindices tvbs tvs =
+#if MIN_VERSION_template_haskell(2,10,0)
+  cxt (appT (conT ''Memoizable) . varT <$> cxttvs)
+#else
   cxt (classP ''Memoizable . (:[]) . varT <$> cxttvs)
+#endif
   where
   cxttvs = case mindices of
     Just ixs → filterBy (`elem` ixs) [1 ..] tvs
