@@ -1,4 +1,5 @@
 {-# LANGUAGE
+      CPP,
       DeriveFunctor,
       GeneralizedNewtypeDeriving,
       TemplateHaskell,
