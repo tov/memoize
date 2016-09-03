@@ -1,5 +1,5 @@
 name:           memoize
-version:        0.6
+version:        0.8
 cabal-version:  >= 1.8
 license:        BSD3
 license-file:   LICENSE
