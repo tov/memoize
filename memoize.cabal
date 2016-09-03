@@ -1,11 +1,11 @@
 name:           memoize
-version:        0.8
+version:        0.8.1
 cabal-version:  >= 1.8
 license:        BSD3
 license-file:   LICENSE
 stability:      experimental
-author:         Jesse A. Tov <tov@ccs.neu.edu>
-maintainer:     tov@ccs.neu.edu
+author:         Jesse A. Tov <jesse@eecs.northwestern.edu>
+maintainer:     jesse@eecs.northwestern.edu
 category:       Data
 synopsis:       A memoization library
 build-type:     Simple
