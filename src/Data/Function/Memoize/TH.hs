@@ -116,7 +116,11 @@ deriveMemoizable' name0 mindices = do
 --   corresponds to a @data@ or @newtype@, and if so, returns the name,
 --   a list of its parameters, and a list of constructor names with
 --   their arities.
+#if MIN_VERSION_template_haskell(2,17,0)
+checkName ∷ Name → Q (Name, [TyVarBndr ()], [(Name, Int)])
+#else
 checkName ∷ Name → Q (Name, [TyVarBndr], [(Name, Int)])
+#endif
 checkName name0 = do
   info            ← reify name0
   case info of
@@ -167,7 +171,11 @@ freshNames xs = take (length xs) alphabet
 -- choose the parameters that have no explicit kind from the
 -- list of binders. The third argument gives the actual type variable
 -- names to use.
+#if MIN_VERSION_template_haskell(2,17,0)
+buildContext ∷ Maybe [Int] → [TyVarBndr a] → [Name] → CxtQ
+#else
 buildContext ∷ Maybe [Int] → [TyVarBndr] → [Name] → CxtQ
+#endif
 buildContext mindices tvbs tvs =
 #if MIN_VERSION_template_haskell(2,10,0)
   cxt (appT (conT ''Memoizable) . varT <$> cxttvs)
@@ -179,13 +187,18 @@ buildContext mindices tvbs tvs =
     Just ixs → filterBy (`elem` ixs) [1 ..] tvs
     Nothing  → filterBy isStar       tvbs   tvs
   --
+#if MIN_VERSION_template_haskell(2,17,0)
+  isStar (PlainTV _ _) = True
+  isStar (KindedTV _ _ StarT) = True
+#else
   isStar (PlainTV _) = True
 #if __GLASGOW_HASKELL__ >= 706
   isStar (KindedTV _ StarT) = True
 #else
   isStar (KindedTV _ StarK) = True
 #endif
-  isStar (KindedTV _ _) = False
+#endif
+  isStar KindedTV {} = False
   --
   filterBy ∷ (a → Bool) → [a] → [b] → [b]
   filterBy p xs ys = snd <$> filter (p . fst) (zip xs ys)
