@@ -9,7 +9,7 @@ maintainer:     jesse@eecs.northwestern.edu
 category:       Data
 synopsis:       A memoization library
 build-type:     Simple
-tested-with:    GHC == 7.10.3, GHC == 7.8.4, GHC == 7.6.3
+tested-with:    GHC == 9.0.1, GHC == 8.10.4, GHC == 8.8.4, GHC == 8.6.5, GHC == 8.4.4, GHC == 7.10.3, GHC == 7.8.4, GHC == 7.6.3
 
 description:
         This library provides a type class 'Memoizable' for memoizing
