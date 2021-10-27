@@ -1,7 +1,7 @@
 memoize
 =======
 
-[![Build Status](https://travis-ci.org/tov/memoize.svg)](http://travis-ci.org/tov/memoize)
+[![Build Status](https://github.com/tov/memoize/actions/workflows/ci.yaml/badge.svg)](https://github.com/tov/memoize/actions/workflows/ci.yaml)
 
 This library provides a type class `Memoizable` for memoizing
 functions, along with instances for a variety of argument types.
