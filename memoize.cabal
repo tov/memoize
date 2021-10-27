@@ -45,7 +45,14 @@ test-suite memoize-test2
     Type: exitcode-stdio-1.0
     Main-is: test2.hs
     build-depends: base, memoize
-    
+
+test-suite memoize-test3
+    Hs-Source-Dirs: test
+    other-modules: Test3Helper
+    Type: exitcode-stdio-1.0
+    Main-is: test3.hs
+    build-depends: base, memoize
+
 source-repository head
   type:                 git
   location:             git://github.com/tov/memoize.git
