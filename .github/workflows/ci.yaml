@@ -1,0 +1,36 @@
+on: [push]
+name: build
+jobs:
+  tests:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:    [ubuntu-latest, macOS-latest, windows-latest]
+        ghc:   [latest, '8.10', '8.6']
+        cabal: [latest, '3.0', '2.4']
+        # GHC 8.8+ only works with cabal v3+
+        exclude:
+          - ghc:   latest
+            cabal: '2.4'
+          - ghc:   '8.10'
+            cabal: '2.4'
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Restore cache
+        uses: actions/cache@v2
+        with:
+          path: ~/runner/.ghcup
+          key: ${{ runner.os }}-${{ hashFiles('~/runner/.ghcup/**') }}
+      - name: Install toolchain
+        uses: haskell/actions/setup@v1
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+      - name: Configure
+        run:  ./Setup.hs configure --enable-tests
+      - name: Build
+        run:  ./Setup.hs build
+      - name: Test
+        run:  ./Setup.hs test
