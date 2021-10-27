@@ -15,10 +15,50 @@ module Data.Function.Memoize.TH (
 #if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
 #endif
+
 import Control.Monad
 import Language.Haskell.TH
-
 import Data.Function.Memoize.Class
+
+---
+--- `#DEFINE`S FOR VERSION COMPATIBILITY
+---
+
+-- GHC 7.6 changed to StarT from StarK:
+#if __GLASGOW_HASKELL__ >= 706
+#  define COMPAT_STAR StarT
+#else
+#  define COMPAT_STAR StarK
+#endif
+
+--- TH 2.10 treats type classes like type constructors:
+#if MIN_VERSION_template_haskell(2,10,0)
+#  define COMPAT_CLASS_PRED(C)  (appT (conT (C)) . varT)
+#else
+#  define COMPAT_CLASS_PRED(C)  (classP (C) . (:[]) . varT)
+#endif
+
+-- TH 2.11 supports GADTs and adds a field to NewtypeD and DataD:
+#if MIN_VERSION_template_haskell(2,11,0)
+#  define COMPAT_TH_GADTS
+#  define COMPAT_NEWTYPE_D(N, T, C)  (NewtypeD _ (N) (T) _ (C) _)
+#  define COMPAT_DATA_D(N, T, C)     (DataD _ (N) (T) _ (C) _)
+#else
+#  undef  COMPAT_TH_GADTS
+#  define COMPAT_NEWTYPE_D(N, T, C)  (NewtypeD _ (N) (T) (C) _)
+#  define COMPAT_DATA_D(N, T, C)     (DataD _ (N) (T) (C) _)
+#endif
+
+-- GHC 9 adds a type parameter to the TyVarBndr type:
+#if __GLASGOW_HASKELL__ >= 900
+#  define COMPAT_TY_VAR_BNDR(V)      (TyVarBndr (V))
+#  define COMPAT_PLAIN_TV(N)         (PlainTV (N) _)
+#  define COMPAT_KINDED_TV(N, K)     (KindedTV (N) _ (K))
+#else
+#  define COMPAT_TY_VAR_BNDR(V)      TyVarBndr
+#  define COMPAT_PLAIN_TV(N)         (PlainTV (N))
+#  define COMPAT_KINDED_TV(N, K)     (KindedTV (N) (K))
+#endif
 
 -- |
 -- To derive 'Memoizable' instances for the given data types.
@@ -91,7 +131,7 @@ deriveMemoizableParams n indices = deriveMemoizable' n (Just indices)
 -- context for the 'Memoizable' instance.  Instead, one can write:
 --
 -- @
---   instance ('Enum' a, 'Bounded' a, 'Memoizable' b) =>
+--   instance ('Eq' a, 'Enum' a, 'Bounded' a, 'Memoizable' b) =>
 --            'Memoizable' (T a b) where
 --     memoize = $(deriveMemoize ''T)
 -- @
@@ -116,30 +156,31 @@ deriveMemoizable' name0 mindices = do
 --   corresponds to a @data@ or @newtype@, and if so, returns the name,
 --   a list of its parameters, and a list of constructor names with
 --   their arities.
-checkName ∷ Name → Q (Name, [TyVarBndr], [(Name, Int)])
+checkName ∷ Name → Q (Name, [COMPAT_TY_VAR_BNDR(())], [(Name, Int)])
 checkName name0 = do
-  info            ← reify name0
+  let can'tDerive      = "deriveMemoizable: Can’t derive a Memoizable " ++
+                         "instance for ‘" ++ show name0 ++ "’ because "
+      can'tDeriveNonTC = can'tDerive ++ "it isn’t a type constructor."
+      can'tDeriveGadt  = can'tDerive ++ "GADTs aren’t supported."
+      --
+      stdizeCon (NormalC name params) = return (name, length params)
+      stdizeCon (RecC name fields)    = return (name, length fields)
+      stdizeCon (InfixC _ name _)     = return (name, 2)
+      stdizeCon (ForallC _ _ con)     = stdizeCon con
+#ifdef COMPAT_TH_GADTS
+      stdizeCon (GadtC _ _ _)         = fail can'tDeriveGadt
+      stdizeCon (RecGadtC _ _ _)      = fail can'tDeriveGadt
+#endif
+  --
+  info ← reify name0
   case info of
-#if MIN_VERSION_template_haskell(2,11,0)
-    TyConI (DataD _ name tvbs _ cons _)
-#else
-    TyConI (DataD _ name tvbs cons _)
-#endif
-               → return (name, tvbs, stdizeCon <$> cons)
-#if MIN_VERSION_template_haskell(2,11,0)
-    TyConI (NewtypeD _ name tvbs _ con _)
-#else
-    TyConI (NewtypeD _ name tvbs con _)
-#endif
-               → return (name, tvbs, [stdizeCon con])
-    _          → fail $
-      "deriveMemoizable: Can't derive a Memoizable instance for `" ++
-      show name0 ++ "' because it isn't a type constructor."
-  where
-    stdizeCon (NormalC name params) = (name, length params)
-    stdizeCon (RecC name fields)    = (name, length fields)
-    stdizeCon (InfixC _ name _)     = (name, 2)
-    stdizeCon (ForallC _ _ con)     = stdizeCon con
+    TyConI (COMPAT_DATA_D(name, tvbs, cons)) → do
+      conInfos ← mapM stdizeCon cons
+      return (name, tvbs, conInfos)
+    TyConI (COMPAT_NEWTYPE_D(name, tvbs, con)) → do
+      conInfo ← stdizeCon con
+      return (name, tvbs, [conInfo])
+    _ → fail can'tDeriveNonTC
 
 -- | Given a list, produces a list of nicely printable, distinct names.
 --   Used so that instances print with nice parameters names, like
@@ -167,25 +208,17 @@ freshNames xs = take (length xs) alphabet
 -- choose the parameters that have no explicit kind from the
 -- list of binders. The third argument gives the actual type variable
 -- names to use.
-buildContext ∷ Maybe [Int] → [TyVarBndr] → [Name] → CxtQ
+buildContext ∷ Maybe [Int] → [COMPAT_TY_VAR_BNDR(a)] → [Name] → CxtQ
 buildContext mindices tvbs tvs =
-#if MIN_VERSION_template_haskell(2,10,0)
-  cxt (appT (conT ''Memoizable) . varT <$> cxttvs)
-#else
-  cxt (classP ''Memoizable . (:[]) . varT <$> cxttvs)
-#endif
+  cxt (COMPAT_CLASS_PRED(''Memoizable) <$> cxttvs)
   where
   cxttvs = case mindices of
     Just ixs → filterBy (`elem` ixs) [1 ..] tvs
     Nothing  → filterBy isStar       tvbs   tvs
   --
-  isStar (PlainTV _) = True
-#if __GLASGOW_HASKELL__ >= 706
-  isStar (KindedTV _ StarT) = True
-#else
-  isStar (KindedTV _ StarK) = True
-#endif
-  isStar (KindedTV _ _) = False
+  isStar (COMPAT_PLAIN_TV(_))               = True
+  isStar (COMPAT_KINDED_TV(_, COMPAT_STAR)) = True
+  isStar _                                  = False
   --
   filterBy ∷ (a → Bool) → [a] → [b] → [b]
   filterBy p xs ys = snd <$> filter (p . fst) (zip xs ys)
@@ -224,30 +257,31 @@ buildMethodDec cons = do
 -- above 'buildMethodDec'
 buildMethodExp ∷ [(Name, Int)] → ExpQ
 buildMethodExp cons = do
-  f      ← newName "f"
-  look   ← newName "look"
-  caches ← mapM (\ _ -> newName "cache") cons
+  f      ← newName "fun"
+  caches ← mapM (\_ → newName "cache") cons
   lam1E (varP f)
     (letE
-      (buildLookup look cons caches
-        : zipWith (buildCache f) cons caches)
-      (varE look))
+      (zipWith (buildCache f) cons caches)
+      (buildLookup cons caches))
 
 -- | Build the look function by building a clause for each constructor
 --   of the datatype.
-buildLookup ∷ Name → [(Name, Int)] → [Name] → DecQ
-buildLookup look cons caches =
-  funD look (zipWith buildLookupClause cons caches)
+buildLookup ∷ [(Name, Int)] → [Name] → ExpQ
+buildLookup cons caches = do
+  a ← newName "arg"
+  lam1E (varP a) .
+    caseE (varE a) $
+      zipWith buildLookupMatch cons caches
 
 -- | Build a lookup clause for one constructor.  We lookup a value
 --   by matching that constructor and then passing its parameters to
 --   the cache for that constructor.
-buildLookupClause ∷ (Name, Int) → Name → ClauseQ
-buildLookupClause (con, arity) cache = do
-  params ← replicateM arity (newName "a")
-  clause [conP con (varP <$> params)]
-         (normalB (foldl appE (varE cache) (varE <$> params)))
-         []
+buildLookupMatch ∷ (Name, Int) → Name → MatchQ
+buildLookupMatch (con, arity) cache = do
+  params ← replicateM arity (newName "param")
+  match (conP con (varP <$> params))
+        (normalB (foldl appE (varE cache) (varE <$> params)))
+        []
 
 -- | Build the definition of a cache for the given constructor.  We do
 --   this by binding the cache name to a cascading sequence of
@@ -262,5 +296,5 @@ buildCache f (con, arity) cache =
 composeMemos ∷ Int → Name → ExpQ → ExpQ
 composeMemos 0     f arg = [| $(varE f) $arg |]
 composeMemos arity f arg = do
-  [| memoize $ \b -> $(composeMemos (arity - 1) f [| $arg b |]) |]
+  [| memoize $ \b → $(composeMemos (arity - 1) f [| $arg b |]) |]
 
