@@ -1,7 +1,7 @@
+cabal-version:  2.2
 name:           memoize
-version:        0.8.1
-cabal-version:  >= 2.4
-license:        BSD3
+version:        1.0.0
+license:        BSD-3-Clause
 license-file:   LICENSE
 stability:      experimental
 author:         Jesse A. Tov <jesse.tov@gmail.com>
@@ -25,6 +25,7 @@ description:
 library
   build-depends:        base >=3 && <5,
                         template-haskell >=2 && <3
+  default-language:     Haskell98
 
   ghc-options:          -Wall -fno-warn-orphans
   hs-source-dirs:       src
@@ -35,20 +36,23 @@ library
     Data.Function.Memoize.Class
 
 test-suite memoize-test1
+    Default-Language: Haskell98
     Hs-Source-Dirs: test
     Type: exitcode-stdio-1.0
     Main-is: test1.hs
     build-depends: base, memoize
 
 test-suite memoize-test2
+    Default-Language: Haskell98
     Hs-Source-Dirs: test
     Type: exitcode-stdio-1.0
     Main-is: test2.hs
     build-depends: base, memoize
 
 test-suite memoize-test3
+    Default-Language: Haskell98
     Hs-Source-Dirs: test
-    other-modules: Test3Helper
+    Other-Modules: Test3Helper
     Type: exitcode-stdio-1.0
     Main-is: test3.hs
     build-depends: base, memoize
