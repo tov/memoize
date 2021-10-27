@@ -4,8 +4,8 @@ cabal-version:  >= 1.8
 license:        BSD3
 license-file:   LICENSE
 stability:      experimental
-author:         Jesse A. Tov <jesse@eecs.northwestern.edu>
-maintainer:     jesse@eecs.northwestern.edu
+author:         Jesse A. Tov <jesse.tov@gmail.com>
+maintainer:     jesse.tov@gmail.com
 category:       Data
 synopsis:       A memoization library
 build-type:     Simple
