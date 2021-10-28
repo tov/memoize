@@ -181,7 +181,7 @@ data IntegerCache v
     }
   deriving Functor
 
--- | A positive integer cache is represented as a little-ending bitwise
+-- | A positive integer cache is represented as a little-endian bitwise
 --   trie
 type PosIntCache v = BinaryTreeCache v
 
