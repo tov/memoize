@@ -33,6 +33,10 @@ module Data.Function.Memoize (
   deriveMemoizable, deriveMemoizableParams, deriveMemoize,
 ) where
 
+#if MIN_VERSION_base(4,16,0)
+#  define COMPAT_HAS_SOLO
+#endif
+
 #if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
 #endif
@@ -41,6 +45,15 @@ import Debug.Trace
 
 import Data.Function.Memoize.Class
 import Data.Function.Memoize.TH
+
+import qualified Data.Complex   as Complex
+import qualified Data.Ratio     as Ratio
+#ifdef COMPAT_HAS_SOLO
+import qualified Data.Tuple     as Tuple
+#endif
+import qualified Data.Version   as Version
+import qualified Data.Void      as Void
+import qualified Data.Word      as Word
 
 -- | Memoize a two argument function
 memoize2 ∷ (Memoizable a, Memoizable b) ⇒
@@ -128,29 +141,6 @@ memoFix7 ff = f where f = memoize7 (ff f)
 --   opposed to when the answer is available in the memo cache.
 traceMemoize ∷ (Memoizable a, Show a) ⇒ (a → b) → a → b
 traceMemoize f = memoize (\a → traceShow a (f a))
-
----
---- Derived instances
----
-
-deriveMemoizable ''()
-deriveMemoizable ''Bool
-deriveMemoizable ''Ordering
-deriveMemoizable ''Maybe
-deriveMemoizable ''Either
-deriveMemoizable ''[]
-
-deriveMemoizable ''(,)
-deriveMemoizable ''(,,)
-deriveMemoizable ''(,,,)
-deriveMemoizable ''(,,,,)
-deriveMemoizable ''(,,,,,)
-deriveMemoizable ''(,,,,,,)
-deriveMemoizable ''(,,,,,,,)
-deriveMemoizable ''(,,,,,,,,)
-deriveMemoizable ''(,,,,,,,,,)
-deriveMemoizable ''(,,,,,,,,,,)
-deriveMemoizable ''(,,,,,,,,,,,)
 
 ---
 --- Binary-tree based memo caches
@@ -274,6 +264,39 @@ memoizeFinite f = memoize (f . fromFinite) . ToFinite
 
 instance Memoizable Int where memoize = memoizeFinite
 instance Memoizable Char where memoize = memoizeFinite
+instance Memoizable Word.Word where memoize = memoizeFinite
+instance Memoizable Word.Word8 where memoize = memoizeFinite
+instance Memoizable Word.Word16 where memoize = memoizeFinite
+instance Memoizable Word.Word32 where memoize = memoizeFinite
+instance Memoizable Word.Word64 where memoize = memoizeFinite
+
+---
+--- Derived instances
+---
+
+deriveMemoizable ''()
+deriveMemoizable ''Bool
+deriveMemoizable ''Ordering
+deriveMemoizable ''Maybe
+deriveMemoizable ''Either
+deriveMemoizable ''[]
+deriveMemoizable ''Complex.Complex
+deriveMemoizable ''Version.Version
+
+#ifdef COMPAT_HAS_SOLO
+deriveMemoizable ''Tuple.Solo
+#endif
+deriveMemoizable ''(,)
+deriveMemoizable ''(,,)
+deriveMemoizable ''(,,,)
+deriveMemoizable ''(,,,,)
+deriveMemoizable ''(,,,,,)
+deriveMemoizable ''(,,,,,,)
+deriveMemoizable ''(,,,,,,,)
+deriveMemoizable ''(,,,,,,,,)
+deriveMemoizable ''(,,,,,,,,,)
+deriveMemoizable ''(,,,,,,,,,,)
+deriveMemoizable ''(,,,,,,,,,,,)
 
 ---
 --- Functions
@@ -304,6 +327,22 @@ data FunctionCache b v
       fcNil  ∷ v,
       fcCons ∷ b → FunctionCache b v
     }
+
+
+---
+--- Other instances
+---
+
+instance Memoizable Void.Void where
+  memoize f = f . Void.absurd
+
+-- Data.Ratio.Ratio isn't derivable because it's an abstract type.
+instance (Integral a, Memoizable a) => Memoizable (Ratio.Ratio a) where
+  memoize f = memoize (f . inj) . prj
+    where
+      prj r      = (Ratio.numerator r, Ratio.denominator r)
+      inj (n, d) = n Ratio.% d
+
 
 ---
 --- Example functions
