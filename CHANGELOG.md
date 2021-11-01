@@ -1,6 +1,9 @@
 # Change Log
 
-## [1.1.0] - 2021-10-27
+## [1.1.1] - 2021-10-31
+- add this changelog to `memoize.cabal`
+
+## [1.1.0] - 2021-10-31
 - add `Memoizable` instances for types from `base`:
    - `Data.Complex.Complex`
    - `Data.Ratio.Ratio`
