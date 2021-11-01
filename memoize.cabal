@@ -22,6 +22,8 @@ description:
         assumptions that, while not guaranteed by the semantics of
         Haskell, appear to be true.
 
+extra-source-files: README.md CHANGELOG.md
+
 library
   build-depends:        base >=3 && <5,
                         template-haskell >=2 && <3
@@ -36,25 +38,25 @@ library
     Data.Function.Memoize.Class
 
 test-suite memoize-test1
-    Default-Language: Haskell98
-    Hs-Source-Dirs: test
-    Type: exitcode-stdio-1.0
-    Main-is: test1.hs
+    default-language: Haskell98
+    hs-source-dirs: test
+    type: exitcode-stdio-1.0
+    main-is: test1.hs
     build-depends: base, memoize
 
 test-suite memoize-test2
-    Default-Language: Haskell98
-    Hs-Source-Dirs: test
-    Type: exitcode-stdio-1.0
-    Main-is: test2.hs
+    default-language: Haskell98
+    hs-source-dirs: test
+    type: exitcode-stdio-1.0
+    main-is: test2.hs
     build-depends: base, memoize
 
 test-suite memoize-test3
-    Default-Language: Haskell98
-    Hs-Source-Dirs: test
-    Other-Modules: Test3Helper
-    Type: exitcode-stdio-1.0
-    Main-is: test3.hs
+    default-language: Haskell98
+    hs-source-dirs: test
+    other-modules: Test3Helper
+    type: exitcode-stdio-1.0
+    main-is: test3.hs
     build-depends: base, memoize
 
 source-repository head
