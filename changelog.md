@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.1.0] - 2021-10-27
+- add `Memoizable` instances for types from `base`:
+   - `Data.Complex.Complex`
+   - `Data.Ratio.Ratio`
+   - `Data.Tuple.Solo`
+   - `Data.Version.Version`
+   - `Data.Void.Void`
+- fix misspelling of “little-endian” in docs
+
 ## [1.0.0] - 2021-10-27
 - support GHC 9
 
