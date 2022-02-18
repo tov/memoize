@@ -51,12 +51,27 @@ test-suite memoize-test2
     main-is: test2.hs
     build-depends: base, memoize
 
+test-suite memoize-test2g
+    default-language: Haskell98
+    hs-source-dirs: test
+    type: exitcode-stdio-1.0
+    main-is: test2g.hs
+    build-depends: base, memoize
+
 test-suite memoize-test3
     default-language: Haskell98
     hs-source-dirs: test
     other-modules: Test3Helper
     type: exitcode-stdio-1.0
     main-is: test3.hs
+    build-depends: base, memoize
+
+test-suite memoize-test3g
+    default-language: Haskell98
+    hs-source-dirs: test
+    other-modules: Test3Helper
+    type: exitcode-stdio-1.0
+    main-is: test3g.hs
     build-depends: base, memoize
 
 source-repository head
