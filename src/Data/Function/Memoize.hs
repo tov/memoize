@@ -158,9 +158,21 @@ data BinaryTreeCache v
 ---
 --- 'Integer' memoization
 ---
+signedBitSize = (finiteBitSize (0 :: Int) - 1) :: Int
+maxInt = fromIntegral (maxBound :: Int) :: Integer
+
+toIntBase :: Integer -> [Int]
+toIntBase 0 = []
+toIntBase i | i <= maxInt && i >= fromIntegral (minBound :: Int) =
+   [fromInteger i]
+toIntBase i = fromInteger (i .&. maxInt) : toIntBase (i `shiftR` signedBitSize)
+
+fromIntBase :: [Int] -> Integer
+fromIntBase [] = 0
+fromIntBase (x:xs) = fromIntBase xs `shiftL` signedBitSize + fromIntegral x
 
 instance Memoizable Integer where
-  memoize f = integerLookup (f <$> theIntegers)
+   memoize f = memoize (f . fromIntBase) . toIntBase
 
 -- | An integer cache stores a value for 0 and separate caches for the
 --   positive and negative integers.
