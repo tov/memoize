@@ -46,6 +46,7 @@ import Debug.Trace
 import Data.Function.Memoize.Class
 import Data.Function.Memoize.TH
 
+import           Data.Bits      (shiftL, shiftR, finiteBitSize, (.&.))
 import qualified Data.Complex   as Complex
 import qualified Data.Ratio     as Ratio
 #ifdef COMPAT_HAS_SOLO
@@ -159,26 +160,25 @@ data BinaryTreeCache v
 --- 'Integer' memoization
 ---
 
-signedBitSize :: Int
-signedBitSize  = finiteBitSize (0 :: Int) - 1
-
-minInt, maxInt :: Integer
-minInt = fromIntegral (minBound :: Int)
-maxInt = fromIntegral (maxBound :: Int)
+instance Memoizable Integer where
+  memoize f = memoize (f . decodeInteger) . encodeInteger
 
 encodeInteger :: Integer -> [Int]
 encodeInteger 0 = []
 encodeInteger i | minInt <= i && i <= maxInt
                 = [fromInteger i]
-encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` signedBitSize)
+encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` intBits)
 
 decodeInteger :: [Int] -> Integer
-decodeInteger  = foldr op 0
-  where
-    op x xs' = fromIntegral x + xs' `shiftL` signedBitSize
+decodeInteger  = foldr op 0 where
+  op i i' = fromIntegral i + i' `shiftL` intBits
 
-instance Memoizable Integer where
-  memoize f = memoize (f . decodeInteger) . encodeInteger
+intBits :: Int
+intBits  = finiteBitSize (0 :: Int) - 1
+
+minInt, maxInt :: Integer
+minInt = fromIntegral (minBound :: Int)
+maxInt = fromIntegral (maxBound :: Int)
 
 ---
 --- Enumerable types using binary search trees
