@@ -46,7 +46,7 @@ import Debug.Trace
 import Data.Function.Memoize.Class
 import Data.Function.Memoize.TH
 
-import           Data.Bits      (shiftL, shiftR, finiteBitSize, (.&.))
+import           Data.Bits      (shiftL, shiftR, finiteBitSize, (.&.), (.|.))
 import qualified Data.Complex   as Complex
 import qualified Data.Ratio     as Ratio
 #ifdef COMPAT_HAS_SOLO
@@ -264,7 +264,7 @@ encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` intBits
 
 decodeInteger :: [Int] -> Integer
 decodeInteger  = foldr op 0 where
-  op i i' = fromIntegral i + i' `shiftL` intBits
+  op i i' = fromIntegral i .|. i' `shiftL` intBits
 
 intBits :: Int
 intBits  = finiteBitSize (0 :: Int) - 1
