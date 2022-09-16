@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.2] - 2022-09-16
+- fix severe slowness in `Memoizable Integer` instance (h/t @darrenks)
+- correct minimum `base` version (h/t @Bodigrim)
+
 ## [1.1.1] - 2021-10-31
 - add this changelog to `memoize.cabal`
 
