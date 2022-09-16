@@ -46,6 +46,7 @@ import Debug.Trace
 import Data.Function.Memoize.Class
 import Data.Function.Memoize.TH
 
+import           Data.Bits      (shiftL, shiftR, finiteBitSize, (.&.), (.|.))
 import qualified Data.Complex   as Complex
 import qualified Data.Ratio     as Ratio
 #ifdef COMPAT_HAS_SOLO
@@ -146,7 +147,7 @@ traceMemoize f = memoize (\a → traceShow a (f a))
 --- Binary-tree based memo caches
 ---
 
--- Used for both 'Integer' and arbitrary 'Int'-like types.
+-- Used for arbitrary types that are bounded and enumerable:
 
 data BinaryTreeCache v
  = BinaryTreeCache {
@@ -154,56 +155,6 @@ data BinaryTreeCache v
     btLeft, btRight ∷ BinaryTreeCache v
    }
    deriving Functor
-
----
---- 'Integer' memoization
----
-
-instance Memoizable Integer where
-  memoize f = integerLookup (f <$> theIntegers)
-
--- | An integer cache stores a value for 0 and separate caches for the
---   positive and negative integers.
-data IntegerCache v
-  = IntegerCache {
-      icZero                 ∷ v,
-      icNegative, icPositive ∷ PosIntCache v
-    }
-  deriving Functor
-
--- | A positive integer cache is represented as a little-endian bitwise
---   trie
-type PosIntCache v = BinaryTreeCache v
-
-theIntegers ∷ IntegerCache Integer
-theIntegers
-  = IntegerCache {
-      icZero     = 0,
-      icNegative = negate <$> thePosInts,
-      icPositive = thePosInts
-    }
-
-thePosInts ∷ PosIntCache Integer
-thePosInts =
-  BinaryTreeCache {
-   btValue = 1,
-   btLeft  = fmap (* 2) thePosInts,
-   btRight = fmap (succ . (* 2)) thePosInts
- }
-
-integerLookup ∷ IntegerCache v → Integer → v
-integerLookup cache n =
-  case n `compare` 0 of
-    EQ → icZero cache
-    GT → posIntLookup (icPositive cache) n
-    LT → posIntLookup (icNegative cache) (negate n)
-
--- PRECONDITION: @n@ is a positive 'Integer'
-posIntLookup ∷ PosIntCache v → Integer → v
-posIntLookup cache 1 = btValue cache
-posIntLookup cache n
-  | even n    = posIntLookup (btLeft cache) (n `div` 2)
-  | otherwise = posIntLookup (btRight cache) (n `div` 2)
 
 ---
 --- Enumerable types using binary search trees
@@ -297,6 +248,30 @@ deriveMemoizable ''(,,,,,,,,)
 deriveMemoizable ''(,,,,,,,,,)
 deriveMemoizable ''(,,,,,,,,,,)
 deriveMemoizable ''(,,,,,,,,,,,)
+
+---
+--- 'Integer' memoization
+---
+
+instance Memoizable Integer where
+  memoize f = memoize (f . decodeInteger) . encodeInteger
+
+encodeInteger :: Integer -> [Int]
+encodeInteger 0 = []
+encodeInteger i | minInt <= i && i <= maxInt
+                = [fromInteger i]
+encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` intBits)
+
+decodeInteger :: [Int] -> Integer
+decodeInteger  = foldr op 0 where
+  op i i' = fromIntegral i .|. i' `shiftL` intBits
+
+intBits :: Int
+intBits  = finiteBitSize (0 :: Int) - 1
+
+minInt, maxInt :: Integer
+minInt = fromIntegral (minBound :: Int)
+maxInt = fromIntegral (maxBound :: Int)
 
 ---
 --- Functions
