@@ -147,7 +147,7 @@ traceMemoize f = memoize (\a → traceShow a (f a))
 --- Binary-tree based memo caches
 ---
 
--- Used for both 'Integer' and arbitrary 'Int'-like types.
+-- Used for arbitrary types that are bounded and enumerable:
 
 data BinaryTreeCache v
  = BinaryTreeCache {
@@ -155,30 +155,6 @@ data BinaryTreeCache v
     btLeft, btRight ∷ BinaryTreeCache v
    }
    deriving Functor
-
----
---- 'Integer' memoization
----
-
-instance Memoizable Integer where
-  memoize f = memoize (f . decodeInteger) . encodeInteger
-
-encodeInteger :: Integer -> [Int]
-encodeInteger 0 = []
-encodeInteger i | minInt <= i && i <= maxInt
-                = [fromInteger i]
-encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` intBits)
-
-decodeInteger :: [Int] -> Integer
-decodeInteger  = foldr op 0 where
-  op i i' = fromIntegral i + i' `shiftL` intBits
-
-intBits :: Int
-intBits  = finiteBitSize (0 :: Int) - 1
-
-minInt, maxInt :: Integer
-minInt = fromIntegral (minBound :: Int)
-maxInt = fromIntegral (maxBound :: Int)
 
 ---
 --- Enumerable types using binary search trees
@@ -272,6 +248,30 @@ deriveMemoizable ''(,,,,,,,,)
 deriveMemoizable ''(,,,,,,,,,)
 deriveMemoizable ''(,,,,,,,,,,)
 deriveMemoizable ''(,,,,,,,,,,,)
+
+---
+--- 'Integer' memoization
+---
+
+instance Memoizable Integer where
+  memoize f = memoize (f . decodeInteger) . encodeInteger
+
+encodeInteger :: Integer -> [Int]
+encodeInteger 0 = []
+encodeInteger i | minInt <= i && i <= maxInt
+                = [fromInteger i]
+encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` intBits)
+
+decodeInteger :: [Int] -> Integer
+decodeInteger  = foldr op 0 where
+  op i i' = fromIntegral i + i' `shiftL` intBits
+
+intBits :: Int
+intBits  = finiteBitSize (0 :: Int) - 1
+
+minInt, maxInt :: Integer
+minInt = fromIntegral (minBound :: Int)
+maxInt = fromIntegral (maxBound :: Int)
 
 ---
 --- Functions
