@@ -158,64 +158,27 @@ data BinaryTreeCache v
 ---
 --- 'Integer' memoization
 ---
-signedBitSize = (finiteBitSize (0 :: Int) - 1) :: Int
-maxInt = fromIntegral (maxBound :: Int) :: Integer
 
-toIntBase :: Integer -> [Int]
-toIntBase 0 = []
-toIntBase i | i <= maxInt && i >= fromIntegral (minBound :: Int) =
-   [fromInteger i]
-toIntBase i = fromInteger (i .&. maxInt) : toIntBase (i `shiftR` signedBitSize)
+signedBitSize :: Int
+signedBitSize  = finiteBitSize (0 :: Int) - 1
 
-fromIntBase :: [Int] -> Integer
-fromIntBase [] = 0
-fromIntBase (x:xs) = fromIntBase xs `shiftL` signedBitSize + fromIntegral x
+minInt, maxInt :: Integer
+minInt = fromIntegral (minBound :: Int)
+maxInt = fromIntegral (maxBound :: Int)
+
+encodeInteger :: Integer -> [Int]
+encodeInteger 0 = []
+encodeInteger i | minInt <= i && i <= maxInt
+                = [fromInteger i]
+encodeInteger i = fromInteger (i .&. maxInt) : encodeInteger (i `shiftR` signedBitSize)
+
+decodeInteger :: [Int] -> Integer
+decodeInteger  = foldr op 0
+  where
+    op x xs' = fromIntegral x + xs' `shiftL` signedBitSize
 
 instance Memoizable Integer where
-   memoize f = memoize (f . fromIntBase) . toIntBase
-
--- | An integer cache stores a value for 0 and separate caches for the
---   positive and negative integers.
-data IntegerCache v
-  = IntegerCache {
-      icZero                 ∷ v,
-      icNegative, icPositive ∷ PosIntCache v
-    }
-  deriving Functor
-
--- | A positive integer cache is represented as a little-endian bitwise
---   trie
-type PosIntCache v = BinaryTreeCache v
-
-theIntegers ∷ IntegerCache Integer
-theIntegers
-  = IntegerCache {
-      icZero     = 0,
-      icNegative = negate <$> thePosInts,
-      icPositive = thePosInts
-    }
-
-thePosInts ∷ PosIntCache Integer
-thePosInts =
-  BinaryTreeCache {
-   btValue = 1,
-   btLeft  = fmap (* 2) thePosInts,
-   btRight = fmap (succ . (* 2)) thePosInts
- }
-
-integerLookup ∷ IntegerCache v → Integer → v
-integerLookup cache n =
-  case n `compare` 0 of
-    EQ → icZero cache
-    GT → posIntLookup (icPositive cache) n
-    LT → posIntLookup (icNegative cache) (negate n)
-
--- PRECONDITION: @n@ is a positive 'Integer'
-posIntLookup ∷ PosIntCache v → Integer → v
-posIntLookup cache 1 = btValue cache
-posIntLookup cache n
-  | even n    = posIntLookup (btLeft cache) (n `div` 2)
-  | otherwise = posIntLookup (btRight cache) (n `div` 2)
+  memoize f = memoize (f . decodeInteger) . encodeInteger
 
 ---
 --- Enumerable types using binary search trees
