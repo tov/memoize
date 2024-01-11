@@ -50,7 +50,11 @@ import Data.Function.Memoize.Class
 #endif
 
 -- GHC 9 adds a type parameter to the TyVarBndr type:
-#if __GLASGOW_HASKELL__ >= 900
+#if __GLASGOW_HASKELL__ >= 908
+#  define COMPAT_TY_VAR_BNDR(V)      (TyVarBndr (BndrVis))
+#  define COMPAT_PLAIN_TV(N)         (PlainTV (N) _)
+#  define COMPAT_KINDED_TV(N, K)     (KindedTV (N) _ (K))
+#elif __GLASGOW_HASKELL__ >= 900
 #  define COMPAT_TY_VAR_BNDR(V)      (TyVarBndr (V))
 #  define COMPAT_PLAIN_TV(N)         (PlainTV (N) _)
 #  define COMPAT_KINDED_TV(N, K)     (KindedTV (N) _ (K))
